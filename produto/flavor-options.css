@@ -1,0 +1,80 @@
+@media (max-width: 639px) {
+  .flavor-options {
+    gap: 0.375rem !important;
+  }
+
+  .flavor-options > button[aria-pressed] {
+    max-width: 100%;
+    min-width: 0;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.75rem;
+  }
+
+  .flavor-options > button[aria-pressed] > span:first-child {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+    line-height: 1.25;
+  }
+
+  .flavor-options > button[aria-pressed] > span:nth-child(2) {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 0.625rem;
+    line-height: 1.25;
+  }
+}
+
+.flavor-options-large button[aria-pressed] {
+  flex: 1 1 auto;
+  width: auto !important;
+  min-width: 0;
+  min-height: 3rem;
+  max-width: none;
+  padding: 0.625rem 0.75rem !important;
+}
+
+.flavor-options-large {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 0.625rem !important;
+}
+
+.flavor-options-large > div {
+  display: flex !important;
+  align-items: stretch !important;
+  width: 100%;
+  gap: 0.5rem !important;
+  margin: 0 !important;
+}
+
+.flavor-options-large > div > button[aria-label^="Remover uma unidade"] {
+  align-self: center !important;
+  flex: 0 0 2.75rem;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+}
+
+.flavor-options-large button[aria-pressed] > span:first-child {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.flavor-options-large button[aria-pressed] > span:nth-child(2) {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}

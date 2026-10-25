@@ -1,0 +1,11 @@
+.product-card-grid {
+  grid-auto-rows: 1fr;
+}
+
+.product-card-grid > div {
+  min-width: 0;
+}
+
+.product-card-grid > div > a[href*="produto/"] {
+  height: 100%;
+}

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5f7fc" />
+  <title>Modelo de rastreamento | VAPE NACIONAL</title>
+  <meta name="description" content="Modelo visual de rastreamento de entregas da VAPE NACIONAL." />
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111827;
+      background: #f5f7fc;
+      --blue: #4169e8;
+      --muted: #687386;
+      --line: #e1e5ee;
+      --green: #15966b;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: inherit; }
+
+    .site-header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(20px, calc((100% - 1120px) / 2));
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; }
+    .brand img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+    .back-link { color: var(--blue); text-decoration: none; font-size: 14px; font-weight: 700; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 56px 20px 48px;
+      text-align: center;
+      background-color: #edf1ff;
+      background-image: linear-gradient(#dce3f3 1px, transparent 1px), linear-gradient(90deg, #dce3f3 1px, transparent 1px);
+      background-size: 42px 42px;
+      border-bottom: 1px solid #dce2ee;
+    }
+
+    .hero-inner { position: relative; z-index: 1; max-width: 720px; margin: auto; }
+    .hero-logo { display: block; width: min(100%, 460px); aspect-ratio: 1; margin: 0 auto 20px; border: 0; border-radius: 50%; object-fit: cover; }
+    .seal { display: inline-block; margin: 0 0 14px; padding: 5px 11px; border: 1px solid #9db2ef; border-radius: 20px; background: #e4eaff; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .hero h1 { margin: 0; font-size: clamp(34px, 7vw, 58px); line-height: .98; font-weight: 900; letter-spacing: -.04em; text-transform: uppercase; }
+    .hero h1 span { color: var(--blue); text-decoration: underline; text-decoration-thickness: 4px; text-underline-offset: 4px; }
+    .hero p { max-width: 590px; margin: 18px auto 0; color: #626b7a; font-size: 15px; line-height: 1.6; }
+    .hero-actions { display: grid; gap: 9px; max-width: 430px; margin: 22px auto 0; }
+    .hero-button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; padding: 0 20px; border: 1px solid var(--blue); border-radius: 6px; color: var(--blue); font-size: 13px; font-weight: 800; text-decoration: none; text-transform: uppercase; }
+    .hero-button.primary { background: var(--blue); color: white; box-shadow: 0 7px 14px rgb(65 105 232 / 20%); }
+    .hero-benefits { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 22px; margin: 26px 0 0; padding: 20px 0 0; border-top: 1px solid #d5dbea; color: #596273; font-size: 12px; list-style: none; }
+
+    .tracking-section { max-width: 1020px; margin: 0 auto; padding: 42px 20px 64px; }
+    .section-heading { margin-bottom: 22px; text-align: center; }
+    .section-heading h2 { margin: 0; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; }
+    .section-heading p { margin: 9px 0 0; color: var(--muted); }
+    .demo-notice { margin: 0 0 22px; padding: 13px 16px; border: 1px solid #efc66a; border-radius: 10px; background: #fff8e5; color: #684b06; font-size: 14px; line-height: 1.5; }
+    .demo-notice strong { display: block; margin-bottom: 3px; }
+    .tracking-list { display: grid; gap: 16px; }
+    .catalog-cta { display: flex; justify-content: center; }
+    .catalog-cta-top { margin: 0 0 18px; }
+    .catalog-cta-bottom { margin: 24px 0 0; }
+    .catalog-cta .hero-button { width: 100%; max-width: 430px; }
+
+    .tracking-card { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 5px 18px rgb(25 40 80 / 5%); }
+    .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .carrier { display: inline-flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 800; }
+    .carrier-mark { width: 36px; height: 36px; object-fit: contain; }
+    .sample-tag { padding: 5px 8px; border-radius: 20px; background: #fff1ce; color: #775306; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .card-summary { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 17px 18px 12px; }
+    .tracking-code { margin: 0; color: #374151; font-size: 13px; font-weight: 700; }
+    .destination { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .current-status { align-self: start; padding: 7px 10px; border-radius: 20px; background: #e5f7f0; color: #08714d; font-size: 11px; font-weight: 800; text-align: center; }
+    .delivery-event { margin: 0 18px 14px; padding: 12px 14px; border-left: 3px solid var(--green); border-radius: 0 8px 8px 0; background: #f0faf6; }
+    .delivery-event strong { display: block; color: #08714d; font-size: 13px; }
+    .delivery-event span { display: block; margin-top: 4px; color: #52665f; font-size: 12px; }
+    details { border-top: 1px solid var(--line); }
+    summary { padding: 13px 18px; color: var(--blue); cursor: pointer; font-size: 13px; font-weight: 700; }
+    .timeline { display: grid; gap: 0; padding: 0 18px 16px; }
+    .timeline-item { position: relative; display: grid; grid-template-columns: 16px 1fr auto; gap: 10px; padding: 0 0 15px; color: #465063; font-size: 12px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item:not(:last-child)::before { position: absolute; top: 11px; bottom: -1px; left: 5px; width: 1px; background: #d9deea; content: ""; }
+    .timeline-dot { z-index: 1; width: 11px; height: 11px; margin-top: 2px; border: 2px solid var(--blue); border-radius: 50%; background: #fff; }
+    .timeline-label { font-weight: 700; }
+    .timeline-time { color: var(--muted); white-space: nowrap; }
+    .page-footer { padding: 20px; border-top: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 12px; text-align: center; }
+
+    @media (max-width: 560px) {
+      .site-header { height: 56px; padding: 0 14px; }
+      .brand { gap: 7px; font-size: 13px; }
+      .brand img { width: 32px; height: 32px; }
+      .back-link { font-size: 12px; }
+      .hero { padding: 32px 15px 36px; }
+      .hero-logo { width: min(44vw, 176px); margin-bottom: 16px; }
+      .hero p { font-size: 14px; }
+      .tracking-section { padding: 32px 14px 44px; }
+      .card-top { padding: 13px 14px; }
+      .card-summary { padding: 14px 14px 10px; }
+      .delivery-event { margin: 0 14px 12px; }
+      summary { padding: 12px 14px; }
+      .timeline { padding: 0 14px 14px; }
+      .timeline-item { grid-template-columns: 16px 1fr; }
+      .timeline-time { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="VAPE NACIONAL - início">
+      <img src="images/logonova.png" alt="" />
+      <span>VAPE NACIONAL</span>
+    </a>
+    <a class="back-link" href="index.html">Voltar ao catálogo</a>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <img class="hero-logo" src="images/logonova.png" alt="Logo VAPE NACIONAL" />
+        <p class="seal">Fornecedor direto</p>
+        <h1 id="hero-title">O menor preço,<br /><span>direto da fonte</span></h1>
+        <div class="hero-actions">
+          <a class="hero-button primary" href="index.html#pods-mais-vendidos">Ver catálogo&nbsp; →</a>
+          <a class="hero-button" href="index.html#faq">Tirar dúvidas</a>
+        </div>
+        <ul class="hero-benefits">
+          <li>100% originais</li>
+          <li>Entrega para todo o Brasil</li>
+          <li>Sem intermediários</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="tracking-section" aria-labelledby="tracking-title">
+      <div class="section-heading">
+        <h2 id="tracking-title">Acompanhe entregas que estão sendo realizadas agora!</h2>
+        <p>Veja entregas flash que estão em rota de entrega nesse EXATO MOMENTO.</p>
+      </div>
+      <div class="catalog-cta catalog-cta-top">
+        <a class="hero-button primary" href="index.html#pods-mais-vendidos">Comprar o Meu!&nbsp; →</a>
+      </div>
+      <aside class="demo-notice" role="note">
+        <strong>Essas são entregas flash de CLIENTES REAIS</strong>
+        Estes rastreios, são de cidades de alguns clientes que optaram pelo FLASH e que já estão em rota de entrega nesse exato momento!
+      </aside>
+      <div id="tracking-list" class="tracking-list" aria-live="polite"></div>
+      <div class="catalog-cta catalog-cta-bottom">
+        <a class="hero-button primary" href="index.html#pods-mais-vendidos">Comprar o Meu!&nbsp; →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">VAPE NACIONAL · Página de rastreamento</footer>
+
+  <script>
+    const demoDeliveries = [
+      { city: "São Paulo", state: "SP", code: "18521730946812" },
+      { city: "Rio de Janeiro", state: "RJ", code: "72941830562714" },
+      { city: "Belo Horizonte", state: "MG", code: "35182740619352" },
+      { city: "Curitiba", state: "PR", code: "60429173852046" },
+      { city: "Florianópolis", state: "SC", code: "91836420571839" },
+      { city: "Porto Alegre", state: "RS", code: "24710583926174" },
+      { city: "Goiânia", state: "GO", code: "56382017493621" },
+      { city: "Brasília", state: "DF", code: "80157362941805" },
+      { city: "Salvador", state: "BA", code: "43619285730468" },
+      { city: "Recife", state: "PE", code: "17583920461732" },
+    ];
+
+    const dateFormatter = new Intl.DateTimeFormat("pt-BR");
+    const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const today = new Date();
+    const postingDate = new Date(today);
+    postingDate.setDate(postingDate.getDate() - 1);
+    const postingDateText = dateFormatter.format(postingDate);
+    const todayText = dateFormatter.format(today);
+    const trackingList = document.getElementById("tracking-list");
+
+    function randomDeliveryTime() {
+      const minutesAfterNine = Math.floor(Math.random() * 180);
+      const deliveryTime = new Date(today);
+      deliveryTime.setHours(9, minutesAfterNine, 0, 0);
+      return timeFormatter.format(deliveryTime);
+    }
+
+    trackingList.innerHTML = demoDeliveries.map((delivery) => {
+      const routeTime = randomDeliveryTime();
+
+      return `
+        <article class="tracking-card">
+          <div class="card-top">
+            <div class="carrier"><img class="carrier-mark" src="images/jadlogo.png" alt="Logo Jadlog" /><span>Jadlog · Entrega Flash</span></div>
+            <span class="sample-tag">Tempo estimado 1-2 Dias</span>
+          </div>
+          <div class="card-summary">
+            <div>
+              <p class="tracking-code">Código: ${delivery.code}</p>
+              <p class="destination">Destino: ${delivery.city} - ${delivery.state}</p>
+            </div>
+            <span class="current-status">Em rota de entrega</span>
+          </div>
+          <div class="delivery-event">
+            <strong>Em rota de entrega para o endereço do destinatário</strong>
+            <span>${delivery.city} - ${delivery.state} · ${todayText} às ${routeTime}</span>
+          </div>
+          <details>
+            <summary>Ver etapas do envio</summary>
+            <div class="timeline">
+              <div class="timeline-item"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">Postagem registrada</span><time class="timeline-time">${postingDateText} às 18:00</time></div>
+              <div class="timeline-item"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">Em transferência</span><time class="timeline-time">${postingDateText} às 22:10</time></div>
+              <div class="timeline-item"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">Em rota para entrega</span><time class="timeline-time">${todayText} às ${routeTime}</time></div>
+            </div>
+          </details>
+        </article>
+      `;
+    }).join("");
+  </script>
+</body>
+</html>
