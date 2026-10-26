@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500" role="img" aria-labelledby="title desc">
+  <title id="title">Smartwatch Fit Plus</title>
+  <desc id="desc">Ilustração de relógio inteligente esportivo sobre fundo azul claro.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf4ff"/>
+      <stop offset="1" stop-color="#c7dbff"/>
+    </linearGradient>
+    <linearGradient id="strap" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2468d8"/>
+      <stop offset=".5" stop-color="#438bff"/>
+      <stop offset="1" stop-color="#1851b6"/>
+    </linearGradient>
+    <linearGradient id="case" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#405a7c"/>
+      <stop offset=".5" stop-color="#152943"/>
+      <stop offset="1" stop-color="#56708f"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#192d4a"/>
+      <stop offset="1" stop-color="#071426"/>
+    </linearGradient>
+    <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.8">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#36557f" flood-opacity=".25"/>
+    </filter>
+  </defs>
+  <rect width="500" height="500" rx="36" fill="url(#bg)"/>
+  <circle cx="250" cy="250" r="164" fill="#fff" opacity=".26"/>
+  <g filter="url(#shadow)">
+    <path d="M206 69q0-16 16-16h56q16 0 16 16l12 112H194z" fill="url(#strap)"/>
+    <path d="M194 319h112l-12 112q0 16-16 16h-56q-16 0-16-16z" fill="url(#strap)"/>
+    <path d="M222 73h56l6 72h-68zM222 355h56l-6 68h-44z" fill="#70aaff" opacity=".45"/>
+    <rect x="144" y="151" width="212" height="205" rx="54" fill="url(#case)" stroke="#9db1cc" stroke-width="8"/>
+    <rect x="164" y="170" width="172" height="167" rx="38" fill="url(#screen)" stroke="#0a172a" stroke-width="5"/>
+    <path d="M356 214h12q13 0 13 13v44q0 13-13 13h-12" fill="#314b6d" stroke="#9db1cc" stroke-width="5"/>
+    <circle cx="250" cy="253" r="61" fill="#111f35" stroke="#344d70" stroke-width="5"/>
+    <path d="M250 208v45l30 20" fill="none" stroke="#72b5ff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="250" cy="253" r="8" fill="#e8f3ff"/>
+    <path d="M196 300q54 24 108 0" fill="none" stroke="#42648d" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="195" cy="189" r="5" fill="#83c8ff"/>
+  </g>
+  <path d="M230 464h40" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".65"/>
+</svg>

