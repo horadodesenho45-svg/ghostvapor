@@ -72,6 +72,12 @@
   .prod button{width:100%;background:var(--blue);color:#fff;border:0;padding:12px;font-size:15px;border-radius:6px;cursor:pointer}
   .prod button:hover{background:var(--blue-d)}
   .prod button.added{background:#1a9b4b}
+  .product-pix{margin-top:12px;padding:12px;border:1px solid #cbdcf6;border-radius:8px;background:#f5f8ff;text-align:center}
+  .product-pix img{display:block;width:min(220px,100%);height:auto;margin:10px auto}
+  .pix-timer{color:#b42318;font-size:18px;font-weight:bold;margin-bottom:10px}
+  .product-pix textarea{width:100%;height:76px;resize:none;border:1px solid #bdc6d1;border-radius:6px;padding:9px;font-size:12px;line-break:anywhere}
+  .copy-pix{width:100%;margin-top:8px;padding:11px;border:0;border-radius:6px;background:var(--blue);color:#fff;font-weight:bold;cursor:pointer}
+  .pix-status{font-size:13px;color:#555;margin-bottom:8px}
   .bar.blue{background:var(--blue-d)}
   .eta{text-align:center;background:var(--blue-l);color:var(--blue-d);padding:10px;font-size:15px;border-radius:6px}
   .step.pending{opacity:.45!important;filter:grayscale(.6)}
@@ -172,6 +178,13 @@
           <div class="price">R$ 17,77</div>
           <div class="cost">PREÇO DE CUSTO SOMENTE PARA VOCÊ</div>
           <button data-n="ELFBAR V40 4.000 PUFFS">GERAR PIX</button>
+          <div class="product-pix hidden" data-pix-panel>
+            <div class="pix-timer" data-pix-timer>07:00</div>
+            <div class="pix-status" data-pix-status>Gerando PIX...</div>
+            <img data-pix-qr alt="QR Code PIX" class="hidden">
+            <textarea data-pix-code readonly aria-label="Código PIX Copia e Cola"></textarea>
+            <button class="copy-pix" type="button">COPIAR PIX</button>
+          </div>
         </div>
         <div class="prod">
           <span class="tag">OFERTA RELÂMPAGO</span>
@@ -182,6 +195,13 @@
           <div class="price">R$ 27,31</div>
           <div class="cost">PREÇO DE CUSTO SOMENTE PARA VOCÊ</div>
           <button data-n="ELFBAR V80 8000 PUFFS">GERAR PIX</button>
+          <div class="product-pix hidden" data-pix-panel>
+            <div class="pix-timer" data-pix-timer>07:00</div>
+            <div class="pix-status" data-pix-status>Gerando PIX...</div>
+            <img data-pix-qr alt="QR Code PIX" class="hidden">
+            <textarea data-pix-code readonly aria-label="Código PIX Copia e Cola"></textarea>
+            <button class="copy-pix" type="button">COPIAR PIX</button>
+          </div>
         </div>
       </div>
     </div>
@@ -352,11 +372,53 @@ document.getElementById('demoPix').addEventListener('click',()=>{
   createPix(pendingPayment.amount,pendingPayment.description);
 });
 search();
-document.querySelectorAll('.prod button').forEach((b,index)=>b.onclick=()=>{
-  pendingPayment={amount:index===0?1777:2731,description:b.dataset.n};
-  document.getElementById('pixPaymentNotice').textContent='Pagamento real de '+(index===0?'R$ 17,77':'R$ 27,31')+'.';
-  openRouteModal();
-});
+const productTimers=new WeakMap();
+function startProductPixTimer(timerElement){
+  clearInterval(productTimers.get(timerElement));
+  let seconds=7*60;
+  const interval=setInterval(()=>{
+    const minutes=Math.floor(seconds/60);
+    const rest=seconds%60;
+    timerElement.textContent=String(minutes).padStart(2,'0')+':'+String(rest).padStart(2,'0');
+    if(seconds<=0){clearInterval(interval);timerElement.textContent='EXPIRADO';}
+    seconds--;
+  },1000);
+  productTimers.set(timerElement,interval);
+}
+document.querySelectorAll('.prod > button[data-n]').forEach((button,index)=>button.addEventListener('click',async()=>{
+  const amount=index===0?1777:2731;
+  const panel=button.nextElementSibling;
+  const timer=panel.querySelector('[data-pix-timer]');
+  const status=panel.querySelector('[data-pix-status]');
+  const qr=panel.querySelector('[data-pix-qr]');
+  const code=panel.querySelector('[data-pix-code]');
+  const copy=panel.querySelector('.copy-pix');
+  panel.classList.remove('hidden');
+  button.disabled=true;
+  button.textContent='GERANDO PIX...';
+  status.textContent='Gerando PIX...';
+  try{
+    const response=await fetch('/api/create-pix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount,description:button.dataset.n,offer_link:location.href})});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||'Não foi possível gerar o PIX.');
+    const pixCode=result.qr_code||result.pix_code||result.copy_paste||'';
+    if(!pixCode)throw new Error('O provedor não retornou o código PIX.');
+    status.textContent='PIX gerado. Complete o pagamento em 7 minutos.';
+    code.value=pixCode;
+    if(result.qr_code_base64){qr.src=result.qr_code_base64;qr.classList.remove('hidden')}else qr.classList.add('hidden');
+    startProductPixTimer(timer);
+    copy.onclick=async()=>{
+      try{await navigator.clipboard.writeText(pixCode)}catch(error){code.select();document.execCommand('copy')}
+      copy.textContent='PIX COPIADO';
+      setTimeout(()=>copy.textContent='COPIAR PIX',2000);
+    };
+    button.textContent='PIX GERADO';
+  }catch(error){
+    status.textContent=error.message;
+    button.disabled=false;
+    button.textContent='TENTAR NOVAMENTE';
+  }
+}));
 function tick(){
   const box=document.getElementById('offer');
   if(!key)return;
